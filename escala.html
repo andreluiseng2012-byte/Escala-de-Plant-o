@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1976d2">
+<title>Escala de Plantão</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 15px;
+    background: #f2f4f7;
+    color: #222;
+}
+h1 { text-align: center; color: #1976d2; margin-bottom: 20px; }
+h2 { font-size: 20px; margin-top: 0; color: #333; }
+.container { max-width: 1000px; margin: auto; }
+.card {
+    background: white;
+    padding: 18px;
+    margin-bottom: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+form { display: flex; gap: 8px; flex-wrap: wrap; }
+input, button, select {
+    font-size: 16px;
+    padding: 11px;
+    border-radius: 7px;
+}
+input, select { border: 1px solid #bbb; }
+input[type="text"] { flex: 1; min-width: 180px; }
+button { border: none; cursor: pointer; font-weight: bold; }
+.btn-primary { background: #1976d2; color: white; }
+.btn-success { background: #2e7d32; color: white; }
+.btn-danger { background: #d32f2f; color: white; }
+.btn-warning { background: #f57c00; color: white; }
+.btn-secondary { background: #616161; color: white; }
+.btn-add-date { background: #1976d2; color: white; width: 100%; margin-top: 8px; }
+.btn-save { background: #2e7d32; color: white; width: 100%; margin-top: 12px; }
+.btn-exibir { background: #455a64; color: white; width: 100%; margin-top: 10px; }
+.btn-adicionar-dia { background: #2e7d32; color: white; }
+.lista-funcionarios { margin-top: 15px; }
+.funcionario-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    margin-bottom: 7px;
+    background: #f5f5f5;
+    border-radius: 7px;
+}
+.funcionario-nome { font-weight: bold; }
+.datas-selecionadas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.data-tag {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    padding: 8px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+}
+.data-tag button {
+    padding: 2px 7px;
+    background: #d32f2f;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+}
+.linha-intervalo { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.linha-intervalo label { font-size: 14px; font-weight: bold; }
+.horarios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+.horarios label { font-weight: bold; display: block; margin-bottom: 5px; }
+.horarios input { width: 100%; }
+.qtd-tecnicos { margin-top: 15px; }
+.qtd-tecnicos label { font-weight: bold; display: block; margin-bottom: 5px; }
+.qtd-tecnicos input { width: 100%; }
+.calendario { margin-top: 12px; }
+.calendario-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.calendario-topo button {
+    background: #1976d2;
+    color: white;
+    padding: 8px 12px;
+}
+.calendario-topo span {
+    font-weight: bold;
+    text-transform: capitalize;
+}
+.calendario-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+.calendario-grid .cabecalho {
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: #555;
+    padding: 4px 0;
+}
+.dia-cel {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+}
+.dia-cel.vazio { background: transparent; border: none; cursor: default; }
+.dia-cel.marcado { background: #1976d2; color: white; border-color: #1976d2; font-weight: bold; }
+.dia-cel.ja-selecionado { background: #c8e6c9; border-color: #81c784; }
+.btn-add-selecionados { background: #2e7d32; color: white; width: 100%; margin-top: 10px; }
+.table-container { overflow-x: auto; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    min-width: 900px;
+}
+th, td { border: 1px solid #ddd; padding: 9px; text-align: center; }
+th { background: #1976d2; color: white; }
+tr:nth-child(even) { background: #f7f7f7; }
+.acoes { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+.acoes button { font-size: 13px; padding: 7px; }
+.vazio { text-align: center; color: #777; padding: 15px; }
+.aviso {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 10px;
+    border-radius: 7px;
+    margin-top: 10px;
+    color: #856404;
+}
+.data-hidden {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.tecnicos-cell { text-align: left; }
+.tecnico-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 14px;
+    padding: 3px 8px;
+    margin: 2px;
+    font-size: 13px;
+}
+.tecnico-chip button {
+    padding: 0 5px;
+    background: transparent;
+    color: #d32f2f;
+    font-size: 13px;
+    font-weight: bold;
+}
+.dia-semana { font-size: 12px; color: #555; display: block; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Escala de Plantão</h1>
+
+<!-- BANCO DE FUNCIONÁRIOS -->
+<div class="card">
+<h2>Banco de Funcionários</h2>
+
+<form id="f-func">
+<input type="text" id="n-func" placeholder="Nome do funcionário" autocomplete="off">
+<button type="submit" class="btn-primary">Inserir Funcionário</button>
+</form>
+
+<div id="l-func" class="lista-funcionarios"></div>
+
+<button type="button" class="btn-warning" id="btn-refazer-escala" style="width:100%; margin-top:14px;">🔄 Refazer Escala com Funcionários Atuais</button>
+</div>
+
+<!-- CONFIGURAÇÃO DA ESCALA -->
+<div class="card">
+<h2>Configurar Escala Coletiva</h2>
+
+<label><strong>Selecione os Dias Desejados:</strong></label>
+
+<div class="calendario">
+    <div class="calendario-topo">
+        <button type="button" id="btn-mes-anterior">‹</button>
+        <span id="calendario-titulo"></span>
+        <button type="button" id="btn-mes-seguinte">›</button>
+    </div>
+    <div class="calendario-grid" id="calendario-grid"></div>
+    <button type="button" class="btn-add-selecionados" id="btn-adicionar-selecionados">➕ Adicionar Dias Marcados</button>
+</div>
+
+<div id="datas-selecionadas" class="datas-selecionadas"></div>
+
+<div class="horarios">
+    <div>
+        <label for="h-entrada">Horário de Entrada:</label>
+        <input type="time" id="h-entrada" value="07:30">
+    </div>
+    <div>
+        <label for="h-saida">Horário de Saída:</label>
+        <input type="time" id="h-saida" value="17:18">
+    </div>
+</div>
+
+<div class="qtd-tecnicos">
+    <label for="qtd-por-dia">Quantidade de Técnicos por Dia:</label>
+    <input type="number" id="qtd-por-dia" value="2" min="1">
+</div>
+
+<button type="button" class="btn-primary" id="btn-sortear" style="width:100%; margin-top:15px;">🎲 Gerar Escala</button>
+<button type="button" class="btn-save" id="btn-salvar">💾 Salvar Escala</button>
+<button type="button" class="btn-exibir" id="btn-exibir">📋 Exibir Escala Salva</button>
+
+<div id="aviso"></div>
+</div>
+
+<!-- ESCALA -->
+<div class="card" id="card-escala">
+<h2>Escala Salva e Editável</h2>
+
+<button type="button" class="btn-warning" id="btn-alterar-todos" style="width:100%; margin-bottom:10px;">🕐 Alterar Horário de Todos</button>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+    <th>Data</th>
+    <th>Técnicos</th>
+    <th>Entrada</th>
+    <th>Saída</th>
+    <th>Ações</th>
+</tr>
+</thead>
+<tbody id="t-esc-body"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+
+// ======================================================
+// BANCO DE DADOS
+// ======================================================
+
+let funcionarios = JSON.parse(localStorage.getItem("funcs") || "[]");
+let escalas = JSON.parse(localStorage.getItem("escs") || "[]");
+// escalas: [{ data, entrada, saida, funcs: [nome1, nome2, ...] }]
+
+// Migração: versões antigas salvavam um único técnico por linha no campo "func".
+// Convertemos para o novo formato com array "funcs" para não quebrar o render().
+escalas = escalas.map(e => {
+    if (!Array.isArray(e.funcs)) {
+        e.funcs = e.func ? [e.func] : [];
+    }
+    delete e.func;
+    return e;
+});
+localStorage.setItem("escs", JSON.stringify(escalas));
+
+let datasSelecionadas = [];
+
+const DIAS_SEMANA = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+
+// ======================================================
+// SALVAR
+// ======================================================
+
+function salvar() {
+    localStorage.setItem("funcs", JSON.stringify(funcionarios));
+    localStorage.setItem("escs", JSON.stringify(escalas));
+    render();
+}
+
+// ======================================================
+// FORMATAR DATA / DIA DA SEMANA
+// ======================================================
+
+function formatarData(data) {
+    if (!data) return "";
+    const partes = data.split("-");
+    return partes[2] + "/" + partes[1] + "/" + partes[0];
+}
+
+function nomeDiaSemana(data) {
+    if (!data) return "";
+    const d = new Date(data + "T00:00:00");
+    return DIAS_SEMANA[d.getDay()];
+}
+
+// ======================================================
+// ESCAPE HTML
+// ======================================================
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// ======================================================
+// RENDERIZAR DATAS SELECIONADAS (antes de gerar)
+// ======================================================
+
+function renderDatasSelecionadas() {
+    const container = document.getElementById("datas-selecionadas");
+    container.innerHTML = "";
+
+    if (datasSelecionadas.length === 0) {
+        container.innerHTML = '<span style="color:#777;">Nenhuma data selecionada.</span>';
+        return;
+    }
+
+    datasSelecionadas.sort().forEach(data => {
+        const tag = document.createElement("div");
+        tag.className = "data-tag";
+        tag.innerHTML = `
+            <span>${formatarData(data)} (${nomeDiaSemana(data)})</span>
+            <button type="button" onclick="removerDataFila('${data}')">×</button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+function removerDataFila(data) {
+    datasSelecionadas = datasSelecionadas.filter(d => d !== data);
+    renderDatasSelecionadas();
+}
+
+// ======================================================
+// RENDERIZAR
+// ======================================================
+
+function render() {
+
+    // FUNCIONÁRIOS
+    const lista = document.getElementById("l-func");
+    lista.innerHTML = "";
+
+    if (funcionarios.length === 0) {
+        lista.innerHTML = '<div class="vazio">Nenhum funcionário cadastrado.</div>';
+    } else {
+        funcionarios.forEach((funcionario, index) => {
+            const item = document.createElement("div");
+            item.className = "funcionario-item";
+            item.innerHTML = `
+                <span class="funcionario-nome">${escapeHtml(funcionario)}</span>
+                <button type="button" class="btn-danger" onclick="excluirFuncionario(${index})">Excluir</button>
+            `;
+            lista.appendChild(item);
+        });
+    }
+
+    // ESCALA
+    const tbody = document.getElementById("t-esc-body");
+    tbody.innerHTML = "";
+
+    if (escalas.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="5" class="vazio">Nenhuma escala cadastrada.</td></tr>
+        `;
+        return;
+    }
+
+    const escalasOrdenadas = [...escalas].sort((a, b) => a.data.localeCompare(b.data));
+
+    escalasOrdenadas.forEach(escala => {
+        const indice = escalas.indexOf(escala);
+
+        const chipsTecnicos = (escala.funcs || []).map((nome, i) => `
+            <span class="tecnico-chip">
+                ${escapeHtml(nome)}
+                <button type="button" onclick="removerTecnicoDoDia(${indice}, ${i})">×</button>
+            </span>
+        `).join("");
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                ${formatarData(escala.data)}
+                <span class="dia-semana">${nomeDiaSemana(escala.data)}</span>
+            </td>
+            <td class="tecnicos-cell">${chipsTecnicos || '<span style="color:#999;">Nenhum</span>'}</td>
+            <td>${escala.entrada}</td>
+            <td>${escala.saida}</td>
+            <td>
+                <div class="acoes">
+                    <button type="button" class="btn-warning" onclick="editarEscala(${indice})">✏️ Editar</button>
+                    <button type="button" class="btn-adicionar-dia" onclick="adicionarNoDia(${indice})">➕ Adicionar</button>
+                    <button type="button" class="btn-danger" onclick="delEsc(${indice})">Excluir Dia</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================================================
+// ADICIONAR FUNCIONÁRIO
+// ======================================================
+
+document.getElementById("f-func").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const input = document.getElementById("n-func");
+    const nome = input.value.trim();
+
+    if (!nome) {
+        alert("Digite o nome do funcionário.");
+        return;
+    }
+
+    if (funcionarios.some(f => f.toLowerCase() === nome.toLowerCase())) {
+        alert("Esse funcionário já está cadastrado.");
+        return;
+    }
+
+    funcionarios.push(nome);
+    input.value = "";
+    salvar();
+});
+
+// ======================================================
+// EXCLUIR FUNCIONÁRIO
+// ======================================================
+
+function excluirFuncionario(index) {
+    const funcionario = funcionarios[index];
+    if (!funcionario) return;
+
+    if (!confirm(`Excluir o funcionário "${funcionario}"?\n\nEle também será removido de todas as escalas.`)) {
+        return;
+    }
+
+    funcionarios.splice(index, 1);
+
+    escalas.forEach(e => {
+        e.funcs = e.funcs.filter(nome => nome !== funcionario);
+    });
+
+    salvar();
+}
+
+// ======================================================
+// MINI CALENDÁRIO - MARCAR VÁRIOS DIAS AVULSOS
+// ======================================================
+
+const hoje = new Date();
+let calendarioAno = hoje.getFullYear();
+let calendarioMes = hoje.getMonth(); // 0-11
+let diasMarcados = new Set(); // datas "AAAA-MM-DD" marcadas no calendário, ainda não adicionadas
+
+const NOMES_MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const DIAS_SEMANA_ABREV = ["D","S","T","Q","Q","S","S"];
+
+function pad2(n) {
+    return String(n).padStart(2, "0");
+}
+
+function isoDeData(ano, mes, dia) {
+    return `${ano}-${pad2(mes + 1)}-${pad2(dia)}`;
+}
+
+function renderCalendario() {
+    document.getElementById("calendario-titulo").textContent =
+        `${NOMES_MESES[calendarioMes]} de ${calendarioAno}`;
+
+    const grid = document.getElementById("calendario-grid");
+    grid.innerHTML = "";
+
+    DIAS_SEMANA_ABREV.forEach(letra => {
+        const cab = document.createElement("div");
+        cab.className = "cabecalho";
+        cab.textContent = letra;
+        grid.appendChild(cab);
+    });
+
+    const primeiroDiaSemana = new Date(calendarioAno, calendarioMes, 1).getDay();
+    const totalDias = new Date(calendarioAno, calendarioMes + 1, 0).getDate();
+
+    for (let i = 0; i < primeiroDiaSemana; i++) {
+        const vazio = document.createElement("div");
+        vazio.className = "dia-cel vazio";
+        grid.appendChild(vazio);
+    }
+
+    for (let dia = 1; dia <= totalDias; dia++) {
+        const iso = isoDeData(calendarioAno, calendarioMes, dia);
+        const cel = document.createElement("div");
+        cel.className = "dia-cel";
+        cel.textContent = dia;
+
+        if (datasSelecionadas.includes(iso)) {
+            cel.classList.add("ja-selecionado");
+        }
+        if (diasMarcados.has(iso)) {
+            cel.classList.add("marcado");
+        }
+
+        cel.addEventListener("click", function() {
+            if (datasSelecionadas.includes(iso)) return;
+            if (diasMarcados.has(iso)) {
+                diasMarcados.delete(iso);
+            } else {
+                diasMarcados.add(iso);
+            }
+            renderCalendario();
+        });
+
+        grid.appendChild(cel);
+    }
+}
+
+document.getElementById("btn-mes-anterior").addEventListener("click", function() {
+    calendarioMes--;
+    if (calendarioMes < 0) {
+        calendarioMes = 11;
+        calendarioAno--;
+    }
+    renderCalendario();
+});
+
+document.getElementById("btn-mes-seguinte").addEventListener("click", function() {
+    calendarioMes++;
+    if (calendarioMes > 11) {
+        calendarioMes = 0;
+        calendarioAno++;
+    }
+    renderCalendario();
+});
+
+document.getElementById("btn-adicionar-selecionados").addEventListener("click", function() {
+    if (diasMarcados.size === 0) {
+        alert("Marque pelo menos um dia no calendário.");
+        return;
+    }
+
+    diasMarcados.forEach(iso => {
+        if (!datasSelecionadas.includes(iso)) {
+            datasSelecionadas.push(iso);
+        }
+    });
+
+    diasMarcados.clear();
+    renderCalendario();
+    renderDatasSelecionadas();
+});
+
+// ======================================================
+// CONTAR DIAS DO FUNCIONÁRIO
+// ======================================================
+
+function contarDiasFuncionario(funcionario) {
+    let total = 0;
+    escalas.forEach(e => {
+        if (e.funcs.includes(funcionario)) total++;
+    });
+    return total;
+}
+
+// ======================================================
+// EMBARALHAR
+// ======================================================
+
+function embaralhar(array) {
+    const novoArray = [...array];
+    for (let i = novoArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [novoArray[i], novoArray[j]] = [novoArray[j], novoArray[i]];
+    }
+    return novoArray;
+}
+
+// ======================================================
+// GERAR ESCALA
+// ======================================================
+
+document.getElementById("btn-sortear").addEventListener("click", function() {
+    const qtdPorDia = parseInt(document.getElementById("qtd-por-dia").value, 10) || 1;
+
+    if (funcionarios.length < qtdPorDia) {
+        alert(`É necessário cadastrar pelo menos ${qtdPorDia} funcionário(s) para essa quantidade por dia.`);
+        return;
+    }
+
+    if (datasSelecionadas.length === 0) {
+        alert("Adicione pelo menos uma data.");
+        return;
+    }
+
+    const entrada = document.getElementById("h-entrada").value;
+    const saida = document.getElementById("h-saida").value;
+
+    if (!entrada || !saida) {
+        alert("Informe o horário de entrada e saída.");
+        return;
+    }
+
+    const datas = embaralhar(datasSelecionadas);
+    const geradas = [];
+    const quantidade = Math.min(qtdPorDia, funcionarios.length);
+
+    // A contagem parte do histórico já salvo e é atualizada a cada data
+    // deste lote, para que a segunda, terceira... data já "enxergue"
+    // quem acabou de ser escalado na data anterior do mesmo lote.
+    const contagem = {};
+    funcionarios.forEach(f => { contagem[f] = contarDiasFuncionario(f); });
+
+    datas.forEach(data => {
+        const escolhidosHoje = [];
+
+        for (let i = 0; i < quantidade; i++) {
+            const candidatos = funcionarios.filter(f => !escolhidosHoje.includes(f));
+
+            let menor = Infinity;
+            candidatos.forEach(f => { if (contagem[f] < menor) menor = contagem[f]; });
+
+            const melhores = candidatos.filter(f => contagem[f] === menor);
+            const escolhido = melhores[Math.floor(Math.random() * melhores.length)];
+
+            escolhidosHoje.push(escolhido);
+            contagem[escolhido]++;
+        }
+
+        geradas.push({
+            data: data,
+            entrada: entrada,
+            saida: saida,
+            funcs: escolhidosHoje
+        });
+    });
+
+    escalas = escalas.concat(geradas);
+    datasSelecionadas = [];
+    renderDatasSelecionadas();
+
+    document.getElementById("aviso").innerHTML = `
+        <div class="aviso">✅ Escala gerada para ${geradas.length} dia(s). Clique em "Salvar Escala" para persistir.</div>
+    `;
+
+    render();
+});
+
+// ======================================================
+// SALVAR ESCALA (persistir)
+// ======================================================
+
+document.getElementById("btn-salvar").addEventListener("click", function() {
+    salvar();
+    document.getElementById("aviso").innerHTML = `
+        <div class="aviso">💾 Escala salva com sucesso!</div>
+    `;
+});
+
+// ======================================================
+// EXIBIR ESCALA SALVA
+// ======================================================
+
+document.getElementById("btn-exibir").addEventListener("click", function() {
+    render();
+    document.getElementById("card-escala").scrollIntoView({ behavior: "smooth" });
+});
+
+// ======================================================
+// EDITAR ESCALA (data / horários)
+// ======================================================
+
+function editarEscala(indice) {
+    const escala = escalas[indice];
+    if (!escala) return;
+
+    const novaData = prompt("Nova data (AAAA-MM-DD):", escala.data);
+    if (novaData === null) return;
+
+    const novaEntrada = prompt("Novo horário de entrada:", escala.entrada);
+    if (novaEntrada === null) return;
+
+    const novaSaida = prompt("Novo horário de saída:", escala.saida);
+    if (novaSaida === null) return;
+
+    escala.data = novaData.trim() || escala.data;
+    escala.entrada = novaEntrada.trim() || escala.entrada;
+    escala.saida = novaSaida.trim() || escala.saida;
+
+    salvar();
+}
+
+// ======================================================
+// ADICIONAR TÉCNICO A UM DIA JÁ EXISTENTE
+// ======================================================
+
+function adicionarNoDia(indice) {
+    const escala = escalas[indice];
+    if (!escala) return;
+
+    const disponiveis = funcionarios.filter(f => !escala.funcs.includes(f));
+    if (disponiveis.length === 0) {
+        alert("Todos os funcionários já estão nesse dia.");
+        return;
+    }
+
+    const nome = prompt("Nome do técnico a adicionar:\n\nDisponíveis:\n" + disponiveis.join(", "));
+    if (!nome) return;
+
+    const encontrado = funcionarios.find(f => f.toLowerCase() === nome.trim().toLowerCase());
+    if (!encontrado) {
+        alert("Funcionário não encontrado no banco de funcionários.");
+        return;
+    }
+
+    if (escala.funcs.includes(encontrado)) {
+        alert("Esse funcionário já está nesse dia.");
+        return;
+    }
+
+    escala.funcs.push(encontrado);
+    salvar();
+}
+
+// ======================================================
+// REMOVER UM TÉCNICO DE UM DIA
+// ======================================================
+
+function removerTecnicoDoDia(indiceEscala, indiceTecnico) {
+    const escala = escalas[indiceEscala];
+    if (!escala) return;
+
+    escala.funcs.splice(indiceTecnico, 1);
+    salvar();
+}
+
+// ======================================================
+// EXCLUIR DIA INTEIRO
+// ======================================================
+
+function delEsc(indice) {
+    if (!confirm("Excluir esse dia da escala? Todos os técnicos desse dia serão removidos.")) {
+        return;
+    }
+    escalas.splice(indice, 1);
+    salvar();
+}
+
+// ======================================================
+// ALTERAR HORÁRIO DE TODOS
+// ======================================================
+
+document.getElementById("btn-alterar-todos").addEventListener("click", function() {
+    if (escalas.length === 0) {
+        alert("Não há escalas para alterar.");
+        return;
+    }
+
+    const novaEntrada = prompt("Novo horário de entrada para TODOS os dias:", escalas[0].entrada);
+    if (novaEntrada === null) return;
+
+    const novaSaida = prompt("Novo horário de saída para TODOS os dias:", escalas[0].saida);
+    if (novaSaida === null) return;
+
+    escalas.forEach(e => {
+        e.entrada = novaEntrada.trim() || e.entrada;
+        e.saida = novaSaida.trim() || e.saida;
+    });
+
+    salvar();
+});
+
+// ======================================================
+// REFAZER ESCALA COM FUNCIONÁRIOS ATUAIS
+// ======================================================
+
+document.getElementById("btn-refazer-escala").addEventListener("click", function() {
+    if (escalas.length === 0) {
+        alert("Não há escalas salvas para refazer.");
+        return;
+    }
+
+    if (funcionarios.length === 0) {
+        alert("Cadastre pelo menos um funcionário antes de refazer a escala.");
+        return;
+    }
+
+    if (!confirm("Isso vai substituir os técnicos de TODAS as datas já salvas, usando a lista atual de funcionários. As datas e horários serão mantidos. Deseja continuar?")) {
+        return;
+    }
+
+    const qtdPadrao = parseInt(document.getElementById("qtd-por-dia").value, 10) || 1;
+    const contagem = {};
+    funcionarios.forEach(f => { contagem[f] = 0; });
+
+    const ordemAleatoria = embaralhar(escalas);
+
+    ordemAleatoria.forEach(escala => {
+        const quantidadeDesejada = (escala.funcs && escala.funcs.length > 0) ? escala.funcs.length : qtdPadrao;
+        const quantidade = Math.min(quantidadeDesejada, funcionarios.length);
+
+        const escolhidosHoje = [];
+
+        for (let i = 0; i < quantidade; i++) {
+            const candidatos = funcionarios.filter(f => !escolhidosHoje.includes(f));
+            let menor = Infinity;
+            candidatos.forEach(f => { if (contagem[f] < menor) menor = contagem[f]; });
+
+            const melhores = candidatos.filter(f => contagem[f] === menor);
+            const escolhido = melhores[Math.floor(Math.random() * melhores.length)];
+
+            escolhidosHoje.push(escolhido);
+            contagem[escolhido]++;
+        }
+
+        escala.funcs = escolhidosHoje;
+    });
+
+    salvar();
+
+    document.getElementById("aviso").innerHTML = `
+        <div class="aviso">🔄 Escala refeita com a lista atual de funcionários!</div>
+    `;
+});
+
+// ======================================================
+// INICIALIZAÇÃO
+// ======================================================
+
+renderCalendario();
+renderDatasSelecionadas();
+render();
+
+</script>
+</body>
+</html>
